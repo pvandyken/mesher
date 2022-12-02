@@ -47,13 +47,13 @@ async def perform_conversion(infile: Path, uid: str):
         shutil.rmtree(work)
 
 
-@app.post('/convert')
-async def convert(file: UploadFile, background_tasks: BackgroundTasks):
-    with tempfile.NamedTemporaryFile('w+b', suffix=''.join(Path(file.filename).suffixes), delete=False) as f:
-        f.write(await file.read())
+@app.post('/jobs')
+async def convert(infile: UploadFile, background_tasks: BackgroundTasks):
+    with tempfile.NamedTemporaryFile('w+b', suffix=''.join(Path(infile.filename).suffixes), delete=False) as f:
+        f.write(await infile.read())
         tmpfile = Path(f.name)
 
-    with tempfile.NamedTemporaryFile('r', delete=False) as f:
+    with tempfile.NamedTemporaryFile('r', suffix='.obj', prefix='mesher_out.', delete=False) as f:
         out = Path(f.name)
 
     uid = uuid.uuid4().hex
@@ -65,7 +65,7 @@ async def convert(file: UploadFile, background_tasks: BackgroundTasks):
     }
 
 
-@app.get('/convert/status')
+@app.get('/jobs/{uid}')
 async def status(uid: str):
     if not uid in jobs:
         raise HTTPException(404)
@@ -81,7 +81,7 @@ async def status(uid: str):
     }
 
 
-@app.get('/convert')
+@app.get('/jobs/{uid}/data')
 async def get(uid: str):
     if not job_success(uid):
         raise HTTPException(404)
@@ -89,7 +89,7 @@ async def get(uid: str):
     return FileResponse(jobs[uid].outfile)
 
 
-@app.delete('/convert')
+@app.delete('/jobs/{uid}')
 async def delete(uid: str):
     if not job_finished(uid):
         raise HTTPException(404)
