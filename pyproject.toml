@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "mesher"
+version = "0.1.0"
+description = "Automated pipeline server for Brainhack Western 2022"
+authors = ["Peter Van Dyken <pvandyk2@uwo.ca>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.88.0"
+uvicorn = "^0.20.0"
+python-multipart = "^0.0.5"
+attrs = "^22.1.0"
+numpy = "^1.23.5"
+pyvista = "^0.37.0"
+scikit-image = "^0.19.3"
+nibabel = "^4.0.2"
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.10.0"
+isort = "^5.10.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
