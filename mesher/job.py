@@ -22,5 +22,6 @@ class Job:
         return attrs.evolve(self, status=State.error)
 
     @classmethod
-    def new_running(cls, path: Path):
+    def new_job(cls, path: Path):
         return cls(State.running, path)
+

@@ -13,9 +13,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     poetry config virtualenvs.options.no-setuptools true && \
     poetry config virtualenvs.in-project true 
 
-COPY . /mesher
+COPY poetry.lock /mesher/poetry.lock
+COPY pyproject.toml /mesher/pyproject.toml
+COPY README.md /mesher/README.MD
 WORKDIR /mesher
 RUN /root/.local/bin/poetry install -n --only main
+COPY . /mesher
 ENTRYPOINT ["/bin/bash"]
 
 
@@ -50,7 +53,10 @@ COPY --from=fastsurfer /opt/freesurfer /opt/freesurfer
 COPY --from=fastsurfer /fastsurfer /fastsurfer
 COPY --from=mesher /mesher /mesher
 
+
 EXPOSE 8000
+ARG fs_license=''
+ENV FS_LICENSE ${fs_license}
 WORKDIR "/mesher"
 ENTRYPOINT ["./.venv/bin/uvicorn", "mesher.main:app", "--host", "0.0.0.0"]
 # COPY ./app /app

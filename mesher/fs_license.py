@@ -1,6 +1,6 @@
 from pathlib import Path
 import os
-import google_secrets as secrets
+import mesher.google_secrets as secrets
 
 LICENSE =  Path("/fs_license")
 
