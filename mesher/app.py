@@ -1,9 +1,7 @@
 import asyncio
 import logging
 import os
-import subprocess as sp
 from pathlib import Path
-from typing import Union
 
 import nibabel as nib
 import numpy as np

@@ -3,16 +3,18 @@ import shutil
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Dict, Union
+import aiohttp
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, HTTPException, UploadFile, Query
 from fastapi.responses import FileResponse
 
 from mesher.app import create_mesh
 from mesher.job import Job, State
+from mesher import fs_license
 
 app = FastAPI()
 jobs: "dict[str, Job]" = {}
+LICENSE = fs_license.get_license_file()
 
 
 def job_success(uid: str):
@@ -38,7 +40,7 @@ async def perform_conversion(infile: Path, uid: str):
     work = Path(tempfile.mkdtemp(".mesher-work"))
     try:
         await create_mesh(
-            infile, jobs[uid].outfile, fs_license=Path(".license"), workdir=work
+            infile, jobs[uid].outfile, fs_license=LICENSE, workdir=work
         )
     except Exception as err:
         jobs[uid] = jobs[uid].set_errored()
@@ -51,13 +53,20 @@ async def perform_conversion(infile: Path, uid: str):
 
 
 @app.post("/jobs")
-async def convert(infile: UploadFile, background_tasks: BackgroundTasks):
-    with tempfile.NamedTemporaryFile(
-        "w+b", suffix="".join(Path(infile.filename).suffixes), delete=False
-    ) as f:
-        f.write(await infile.read())
-        tmpfile = Path(f.name)
-
+async def convert_url(background_tasks: BackgroundTasks, infile_url: str, ext: str = Query(..., regex=r"^\.")):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(infile_url) as response:
+            if response.status >= 400:
+                raise HTTPException(404, detail="URL not accessible")
+            with tempfile.NamedTemporaryFile(
+                "w+b", suffix=ext, delete=False
+            ) as f:
+                f.write(await response.read())
+                infile = Path(f.name)
+    return convert(infile, background_tasks)
+            
+        
+def convert(infile: Path, background_tasks: BackgroundTasks):
     with tempfile.NamedTemporaryFile(
         "r", suffix=".obj", prefix="mesher_out.", delete=False
     ) as f:
@@ -66,7 +75,7 @@ async def convert(infile: UploadFile, background_tasks: BackgroundTasks):
     uid = uuid.uuid4().hex
     jobs[uid] = Job.new_running(out)
 
-    background_tasks.add_task(perform_conversion, tmpfile, uid)
+    background_tasks.add_task(perform_conversion, infile, uid)
     return {"jobid": uid}
 
 
@@ -83,6 +92,15 @@ async def status(uid: str):
 
     return {"status": status}
 
+@app.post("/jobs/data")
+async def convert_data(background_tasks: BackgroundTasks, infile: UploadFile):
+    with tempfile.NamedTemporaryFile(
+        "w+b", suffix="".join(Path(infile.filename).suffixes), delete=False
+    ) as f:
+        f.write(await infile.read())
+        tmpfile = Path(f.name)
+
+    return convert(tmpfile, background_tasks)
 
 @app.get("/jobs/{uid}/data")
 async def get(uid: str):
