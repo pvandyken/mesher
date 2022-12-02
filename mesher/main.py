@@ -29,7 +29,7 @@ def job_finished(uid: str):
 
 @app.get('/')
 async def main():
-    yield {
+    return {
         "msg": "hello world!"
     }
 
