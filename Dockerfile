@@ -1,25 +1,25 @@
 FROM deepmi/fastsurfer:gpu-v1.1.1 AS fastsurfer
 
-FROM ubuntu:20.04 as mesher
+FROM python:3.10.7-slim as mesher
 
-COPY ./mesher /mesher
-# Repeat installation from fastsurfer
-# Install required packages for freesurfer to run
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    libgl1-mes-glx \
+    libgl1-mesa-glx \
     libxrender-dev && \
     apt clean && \
     curl -sSL https://install.python-poetry.org | python3 - && \
     export PATH="/root/.local/bin:$PATH" && \
     poetry config virtualenvs.options.no-pip true && \
     poetry config virtualenvs.options.no-setuptools true && \
-    poetry config virtualenvs.in-project true && \
-    cd /mesher && \
-    poetry install -n --only main
+    poetry config virtualenvs.in-project true 
 
-FROM ubuntu:20.04 AS runtime
+COPY . /mesher
+WORKDIR /mesher
+RUN /root/.local/bin/poetry install -n --only main
+ENTRYPOINT ["/bin/bash"]
 
+
+FROM python:3.10.7-slim AS runtime
 
 # Repeat installation from fastsurfer
 # Install required packages for freesurfer to run
@@ -48,7 +48,11 @@ ENV OS=Linux \
 COPY --from=fastsurfer /venv /venv
 COPY --from=fastsurfer /opt/freesurfer /opt/freesurfer
 COPY --from=fastsurfer /fastsurfer /fastsurfer
+COPY --from=mesher /mesher /mesher
 
+EXPOSE 8000
+WORKDIR "/mesher"
+ENTRYPOINT ["./.venv/bin/uvicorn", "mesher.main:app", "--host", "0.0.0.0"]
 # COPY ./app /app
 
 # RUN python -m venv /venv \
