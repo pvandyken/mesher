@@ -8,7 +8,6 @@ from typing import Union
 import nibabel as nib
 import numpy as np
 import pyvista as pv
-import typer
 from skimage import measure
 
 logger = logging.getLogger(__name__)
@@ -63,14 +62,14 @@ async def create_mesh(
     pv.save_meshio(out_path, centered)
 
 
-def cli(
-    in_path: Path,
-    out_path: Path,
-    fs_license: Path = typer.Option(Path(".license")),
-    workdir: Path = typer.Option(...),
-):
-    asyncio.run(create_mesh(in_path, out_path, workdir, fs_license))
+# def cli(
+#     in_path: Path,
+#     out_path: Path,
+#     fs_license: Path = typer.Option(Path(".license")),
+#     workdir: Path = typer.Option(...),
+# ):
+#     asyncio.run(create_mesh(in_path, out_path, workdir, fs_license))
 
 
-if __name__ == "__main__":
-    typer.run(create_mesh)
+# if __name__ == "__main__":
+#     typer.run(create_mesh)
