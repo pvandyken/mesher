@@ -54,11 +54,11 @@ COPY --from=fastsurfer /fastsurfer /fastsurfer
 COPY --from=mesher /mesher /mesher
 
 
-EXPOSE 8000
+EXPOSE 8080
 ARG fs_license=''
 ENV FS_LICENSE ${fs_license}
 WORKDIR "/mesher"
-ENTRYPOINT ["./.venv/bin/uvicorn", "mesher.main:app", "--host", "0.0.0.0"]
+ENTRYPOINT ["./.venv/bin/uvicorn", "mesher.main:app", "--host", "0.0.0.0", "--port", "8080"]
 # COPY ./app /app
 
 # RUN python -m venv /venv \

@@ -84,6 +84,11 @@ def get_uid():
     return uid
 
 
+@app.get("/_ah/health")
+def health_check():
+    return "healthy"
+
+
 @app.post("/jobs")
 async def convert_url(background_tasks: BackgroundTasks, infile: InputURL):
     with tempfile.NamedTemporaryFile(
