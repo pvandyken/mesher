@@ -1,11 +1,17 @@
 runtime: custom
 env: flex
-network:
-  name: net
-  forwarded_ports:
-    - 8000
 service_account: mesher@appspot.gserviceaccount.com
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 1
 resources:
   cpu: 2
   memory_gb: 2
-  disk_size_gb: 10
+  disk_size_gb: 20
+
+readiness_check:
+  path: "/_ah/health"
+  app_start_timeout_sec: '600'
+
+liveness_check:
+  path: "/_ah/health"
